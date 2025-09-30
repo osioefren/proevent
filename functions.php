@@ -13,3 +13,23 @@ function proevent_theme_setup() {
     add_theme_support( 'post-thumbnails' );
 }
 add_action( 'after_setup_theme', 'proevent_theme_setup' );
+
+
+function proevent_register_features() {
+    // menus
+    register_nav_menus( [
+        'primary' => __( 'Primary Menu', 'proevent' ),
+        'footer'  => __( 'Footer Menu', 'proevent' ),
+    ] );
+
+    // sidebar
+    register_sidebar( [
+        'name'          => __( 'Sidebar', 'proevent' ),
+        'id'            => 'sidebar-1',
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
+    ] );
+}
+add_action( 'after_setup_theme', 'proevent_register_features' );
