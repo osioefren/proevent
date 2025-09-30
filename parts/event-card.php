@@ -1,4 +1,5 @@
-<article id="post-<?php the_ID(); ?>" <?php post_class('border rounded-lg shadow-sm overflow-hidden bg-white hover:shadow-lg transition-shadow duration-300'); ?>>
+<article id="post-<?php the_ID(); ?>" <?php post_class('border rounded-lg shadow-sm overflow-hidden bg-white hover:shadow-lg transition-shadow duration-300 bg-yellow-200'); ?>>
+
 
     <?php if ( has_post_thumbnail() ) : 
         $thumb_id  = get_post_thumbnail_id();
