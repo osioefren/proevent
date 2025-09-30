@@ -1,31 +1,23 @@
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo( 'charset' ); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php wp_head(); ?>
-</head>
-<body <?php body_class(); ?>>
-
-<header class="site-header">
-    <div class="container">
+<header class="bg-gray-900 text-white">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <?php if ( has_custom_logo() ) : ?>
             <div class="site-logo">
                 <?php the_custom_logo(); ?>
             </div>
         <?php else : ?>
-            <h1 class="site-title">
-                <a href="<?php echo esc_url( home_url( '/' ) ); ?>">
+            <h1 class="text-2xl font-bold">
+                <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="hover:text-blue-400">
                     <?php bloginfo( 'name' ); ?>
                 </a>
             </h1>
         <?php endif; ?>
 
-        <nav class="site-nav">
+        <nav>
             <?php
             wp_nav_menu( array(
                 'theme_location' => 'primary',
                 'container'      => false,
+                'menu_class'     => 'flex space-x-6 text-lg',
             ) );
             ?>
         </nav>
