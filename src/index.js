@@ -1,5 +1,7 @@
 import { registerBlockType } from '@wordpress/blocks';
 import { useBlockProps } from '@wordpress/block-editor';
+import './event-grid.js';
+
 
 registerBlockType('proevent/event-grid', {
     title: 'Event Grid',

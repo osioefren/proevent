@@ -1,7 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;  
 
+// --------------------
 // Enqueue Tailwind build output
+// --------------------
 function proevent_enqueue_scripts() {
     wp_enqueue_style(
         'proevent-style',
@@ -12,11 +14,13 @@ function proevent_enqueue_scripts() {
 }
 add_action( 'wp_enqueue_scripts', 'proevent_enqueue_scripts' );
 
+// --------------------
+// Theme setup
+// --------------------
 function proevent_theme_setup() {
     add_theme_support( 'title-tag' );
     add_theme_support( 'post-thumbnails' );
 }
-
 add_action( 'after_setup_theme', 'proevent_theme_setup' );
 
 function proevent_register_features() {
@@ -38,7 +42,9 @@ function proevent_register_features() {
 }
 add_action( 'after_setup_theme', 'proevent_register_features' );
 
+// --------------------
 // Register CPT: Event
+// --------------------
 function proevent_register_cpt_event() {
     $labels = [
         'name'          => __( 'Events', 'proevent' ),
@@ -69,7 +75,9 @@ function proevent_register_cpt_event() {
 }
 add_action( 'init', 'proevent_register_cpt_event' );
 
-
+// --------------------
+// Event Meta Boxes
+// --------------------
 function proevent_add_event_meta_boxes() {
     add_meta_box(
         'proevent_event_details',
@@ -85,11 +93,10 @@ add_action( 'add_meta_boxes', 'proevent_add_event_meta_boxes' );
 function proevent_event_meta_callback( $post ) {
     wp_nonce_field( basename( __FILE__ ), 'proevent_event_nonce' );
 
-    $date  = get_post_meta( $post->ID, '_proevent_date', true );
-    $time  = get_post_meta( $post->ID, '_proevent_time', true );
-    $loc   = get_post_meta( $post->ID, '_proevent_location', true );
-    $reg   = get_post_meta( $post->ID, '_proevent_registration', true );
-
+    $date = get_post_meta( $post->ID, '_proevent_date', true );
+    $time = get_post_meta( $post->ID, '_proevent_time', true );
+    $loc  = get_post_meta( $post->ID, '_proevent_location', true );
+    $reg  = get_post_meta( $post->ID, '_proevent_registration', true );
     ?>
     <p>
         <label for="proevent_date"><?php _e( 'Event Date', 'proevent' ); ?></label><br>
@@ -125,10 +132,10 @@ function proevent_save_event_meta( $post_id ) {
     }
 
     $fields = [
-        'proevent_date'        => '_proevent_date',
-        'proevent_time'        => '_proevent_time',
-        'proevent_location'    => '_proevent_location',
-        'proevent_registration'=> '_proevent_registration',
+        'proevent_date'         => '_proevent_date',
+        'proevent_time'         => '_proevent_time',
+        'proevent_location'     => '_proevent_location',
+        'proevent_registration' => '_proevent_registration',
     ];
 
     foreach ( $fields as $field => $key ) {
@@ -138,3 +145,98 @@ function proevent_save_event_meta( $post_id ) {
     }
 }
 add_action( 'save_post', 'proevent_save_event_meta' );
+
+// --------------------
+// Register Event Grid Block
+// --------------------
+function proevent_register_blocks() {
+    $asset_file = include( get_template_directory() . '/build/index.asset.php' );
+
+    wp_register_script(
+        'proevent-event-grid',
+        get_template_directory_uri() . '/build/index.js',
+        $asset_file['dependencies'],
+        $asset_file['version']
+    );
+
+    register_block_type( 'proevent/event-grid', array(
+        'editor_script'   => 'proevent-event-grid',
+        'render_callback' => 'proevent_render_event_grid',
+        'attributes'      => array(
+            'limit' => array(
+                'type'    => 'number',
+                'default' => 6,
+            ),
+            'category' => array(
+                'type'    => 'string',
+                'default' => '',
+            ),
+            'order' => array(
+                'type'    => 'string',
+                'default' => 'ASC',
+            ),
+        ),
+    ) );
+}
+add_action( 'init', 'proevent_register_blocks' );
+
+// --------------------
+// Dynamic Render Callback
+// --------------------
+function proevent_render_event_grid( $attributes ) {
+    $args = [
+        'post_type'      => 'event',
+        'posts_per_page' => $attributes['limit'] ?? 6,
+        'order'          => $attributes['order'] ?? 'ASC',
+    ];
+
+    if ( ! empty( $attributes['category'] ) ) {
+        $args['tax_query'][] = [
+            'taxonomy' => 'event-category',
+            'field'    => 'slug',
+            'terms'    => $attributes['category'],
+        ];
+    }
+
+    $query = new WP_Query( $args );
+    ob_start();
+
+    if ( $query->have_posts() ) {
+        echo '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
+        while ( $query->have_posts() ) {
+            $query->the_post();
+
+            $date        = get_post_meta( get_the_ID(), '_proevent_date', true );
+            $time        = get_post_meta( get_the_ID(), '_proevent_time', true );
+            $location    = get_post_meta( get_the_ID(), '_proevent_location', true );
+            $registration= get_post_meta( get_the_ID(), '_proevent_registration', true );
+
+            ?>
+            <div class="border rounded-lg p-4 shadow hover:shadow-lg transition">
+                <?php if ( has_post_thumbnail() ) : ?>
+                    <div class="mb-3">
+                        <?php the_post_thumbnail( 'medium', [ 'class' => 'w-full h-48 object-cover rounded' ] ); ?>
+                    </div>
+                <?php endif; ?>
+                <h3 class="text-xl font-bold mb-2"><?php the_title(); ?></h3>
+                <?php if ( $date || $time ) : ?>
+                    <p class="text-gray-600 mb-1">📅 <?php echo esc_html( $date ); ?> - ⏰ <?php echo esc_html( $time ); ?></p>
+                <?php endif; ?>
+                <?php if ( $location ) : ?>
+                    <p class="text-gray-600 mb-2">📍 <?php echo esc_html( $location ); ?></p>
+                <?php endif; ?>
+                <div class="mb-3"><?php the_excerpt(); ?></div>
+                <?php if ( $registration ) : ?>
+                    <a href="<?php echo esc_url( $registration ); ?>" target="_blank" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Register</a>
+                <?php endif; ?>
+            </div>
+            <?php
+        }
+        echo '</div>';
+        wp_reset_postdata();
+    } else {
+        echo '<p>No events found.</p>';
+    }
+
+    return ob_get_clean();
+}

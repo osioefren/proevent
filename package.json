@@ -4,9 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tailwindcss -i ./assets/css/style.css -o ./dist/style.css --minify",
+   
     "watch": "tailwindcss -i ./assets/css/style.css -o ./dist/style.css --watch",
-  "dev": "tailwindcss -i ./assets/css/style.css -o ./dist/style.css --watch"
+    "dev": "tailwindcss -i ./assets/css/style.css -o ./dist/style.css --watch",
+     "start": "wp-scripts start",
+    "build": "wp-scripts build"
   },
   "keywords": [],
   "author": "",
