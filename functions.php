@@ -37,3 +37,104 @@ function proevent_register_features() {
     ] );
 }
 add_action( 'after_setup_theme', 'proevent_register_features' );
+
+// Register CPT: Event
+function proevent_register_cpt_event() {
+    $labels = [
+        'name'          => __( 'Events', 'proevent' ),
+        'singular_name' => __( 'Event', 'proevent' ),
+    ];
+    $args = [
+        'labels'       => $labels,
+        'public'       => true,
+        'has_archive'  => true,
+        'menu_icon'    => 'dashicons-calendar',
+        'supports'     => ['title', 'editor', 'thumbnail', 'excerpt'],
+        'rewrite'      => ['slug' => 'events'],
+        'show_in_rest' => true,
+    ];
+    register_post_type( 'event', $args );
+
+    // Taxonomy: Event Category
+    register_taxonomy(
+        'event-category',
+        'event',
+        [
+            'label'        => __( 'Event Categories', 'proevent' ),
+            'rewrite'      => ['slug' => 'event-category'],
+            'hierarchical' => true,
+            'show_in_rest' => true,
+        ]
+    );
+}
+add_action( 'init', 'proevent_register_cpt_event' );
+
+
+function proevent_add_event_meta_boxes() {
+    add_meta_box(
+        'proevent_event_details',
+        __( 'Event Details', 'proevent' ),
+        'proevent_event_meta_callback',
+        'event',
+        'normal',
+        'high'
+    );
+}
+add_action( 'add_meta_boxes', 'proevent_add_event_meta_boxes' );
+
+function proevent_event_meta_callback( $post ) {
+    wp_nonce_field( basename( __FILE__ ), 'proevent_event_nonce' );
+
+    $date  = get_post_meta( $post->ID, '_proevent_date', true );
+    $time  = get_post_meta( $post->ID, '_proevent_time', true );
+    $loc   = get_post_meta( $post->ID, '_proevent_location', true );
+    $reg   = get_post_meta( $post->ID, '_proevent_registration', true );
+
+    ?>
+    <p>
+        <label for="proevent_date"><?php _e( 'Event Date', 'proevent' ); ?></label><br>
+        <input type="date" name="proevent_date" id="proevent_date" value="<?php echo esc_attr( $date ); ?>" class="widefat">
+    </p>
+    <p>
+        <label for="proevent_time"><?php _e( 'Event Time', 'proevent' ); ?></label><br>
+        <input type="time" name="proevent_time" id="proevent_time" value="<?php echo esc_attr( $time ); ?>" class="widefat">
+    </p>
+    <p>
+        <label for="proevent_location"><?php _e( 'Location', 'proevent' ); ?></label><br>
+        <input type="text" name="proevent_location" id="proevent_location" value="<?php echo esc_attr( $loc ); ?>" class="widefat">
+    </p>
+    <p>
+        <label for="proevent_registration"><?php _e( 'Registration Link', 'proevent' ); ?></label><br>
+        <input type="url" name="proevent_registration" id="proevent_registration" value="<?php echo esc_attr( $reg ); ?>" class="widefat">
+    </p>
+    <?php
+}
+
+function proevent_save_event_meta( $post_id ) {
+    if ( ! isset( $_POST['proevent_event_nonce'] ) ||
+         ! wp_verify_nonce( $_POST['proevent_event_nonce'], basename( __FILE__ ) ) ) {
+        return $post_id;
+    }
+
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return $post_id;
+    }
+
+    if ( 'event' !== $_POST['post_type'] || ! current_user_can( 'edit_post', $post_id ) ) {
+        return $post_id;
+    }
+
+    $fields = [
+        'proevent_date'        => '_proevent_date',
+        'proevent_time'        => '_proevent_time',
+        'proevent_location'    => '_proevent_location',
+        'proevent_registration'=> '_proevent_registration',
+    ];
+
+    foreach ( $fields as $field => $key ) {
+        if ( isset( $_POST[$field] ) ) {
+            update_post_meta( $post_id, $key, sanitize_text_field( $_POST[$field] ) );
+        }
+    }
+}
+add_action( 'save_post', 'proevent_save_event_meta' );
