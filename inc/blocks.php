@@ -96,3 +96,29 @@ function proevent_render_event_grid( $attributes ) {
 
     return ob_get_clean();
 }
+
+/**
+ * Enqueue Tailwind CSS for frontend
+ */
+function proevent_enqueue_tailwind() {
+    wp_enqueue_style(
+        'proevent-tailwind',
+        get_template_directory_uri() . '/dist/style.css',
+        array(),
+        filemtime( get_template_directory() . '/dist/style.css' )
+    );
+}
+add_action( 'wp_enqueue_scripts', 'proevent_enqueue_tailwind' );
+
+/**
+ * Enqueue Tailwind CSS for block editor
+ */
+function proevent_enqueue_editor_tailwind() {
+    wp_enqueue_style(
+        'proevent-tailwind-editor',
+        get_template_directory_uri() . '/dist/style.css',
+        array(),
+        filemtime( get_template_directory() . '/dist/style.css' )
+    );
+}
+add_action( 'enqueue_block_editor_assets', 'proevent_enqueue_editor_tailwind' );
